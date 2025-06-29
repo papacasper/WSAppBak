@@ -1,0 +1,13 @@
+C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Debug\net8.0-windows\WSAppBak.exe
+C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Debug\net8.0-windows\WSAppBak.deps.json
+C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Debug\net8.0-windows\WSAppBak.runtimeconfig.json
+C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Debug\net8.0-windows\WSAppBak.dll
+C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Debug\net8.0-windows\WSAppBak.pdb
+C:\Users\Casper\Documents\GitHub\WSAppBak\obj\Debug\net8.0-windows\WSAppBak.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Casper\Documents\GitHub\WSAppBak\obj\Debug\net8.0-windows\WSAppBak.csproj.CoreCompileInputs.cache
+C:\Users\Casper\Documents\GitHub\WSAppBak\obj\Debug\net8.0-windows\WSAppBak.sourcelink.json
+C:\Users\Casper\Documents\GitHub\WSAppBak\obj\Debug\net8.0-windows\WSAppBak.dll
+C:\Users\Casper\Documents\GitHub\WSAppBak\obj\Debug\net8.0-windows\refint\WSAppBak.dll
+C:\Users\Casper\Documents\GitHub\WSAppBak\obj\Debug\net8.0-windows\WSAppBak.pdb
+C:\Users\Casper\Documents\GitHub\WSAppBak\obj\Debug\net8.0-windows\WSAppBak.genruntimeconfig.cache
+C:\Users\Casper\Documents\GitHub\WSAppBak\obj\Debug\net8.0-windows\ref\WSAppBak.dll
