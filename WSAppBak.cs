@@ -1,329 +1,197 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Xml;
 
 namespace WSAppBak
 {
-	internal class WSAppBak
-	{
-		private string AppName = "Windows Store App Backup";
+    internal class WSAppBak
+    {
+        private readonly string AppName      = "Windows Store App Backup";
+        private readonly string AppCreator   = "Kiran Murmu";
+        private readonly string WSAppXmlFile = "AppxManifest.xml";
+        private bool Checking                = true;
 
-		private string AppCreator = "Kiran Murmu";
+        private string WSAppPath;
+        private string WSAppOutputPath;
+        private string WSAppFileName;
+        private string WSAppPublisher;
 
-		private string AppCurrentDirctory = Directory.GetCurrentDirectory();
+        public void Run()
+        {
+            ReadArg();
+        }
 
-		private string WSAppXmlFile = "AppxManifest.xml";
+        private void ReadArg()
+        {
+            while (Checking)
+            {
+                Console.Clear();
+                Console.WriteLine($"\t\t'{AppName}' by {AppCreator}");
+                Console.WriteLine(new string('=', 80));
+                Console.Write("Enter the App path: ");
+                WSAppPath = Console.ReadLine()?.Trim('"') ?? "";
 
-		private bool Checking = true;
+                if (!File.Exists(Path.Combine(WSAppPath, WSAppXmlFile)))
+                {
+                    Console.WriteLine($"\nInvalid App Path; '{WSAppXmlFile}' not found!");
+                    Pause();
+                    continue;
+                }
 
-		private string WSAppName;
+                Console.Write("\nEnter the Output path: ");
+                WSAppOutputPath = Console.ReadLine()?.Trim('"') ?? "";
 
-		private string WSAppPath;
+                if (!Directory.Exists(WSAppOutputPath))
+                {
+                    Console.WriteLine("\nInvalid Output Path; directory not found!");
+                    Pause();
+                    continue;
+                }
 
-		private string WSAppVersion;
+                WSAppFileName = Path.GetFileName(WSAppPath);
+                ExtractPublisherFromManifest();
+                MakeAppx();
+            }
+        }
 
-		private string WSAppFileName;
+        private void ExtractPublisherFromManifest()
+        {
+            using var xml = XmlReader.Create(Path.Combine(WSAppPath, WSAppXmlFile));
+            while (xml.Read())
+            {
+                if (xml.IsStartElement() && xml.Name == "Identity")
+                {
+                    WSAppPublisher = xml["Publisher"] ?? throw new Exception("Publisher missing");
+                    break;
+                }
+            }
+        }
 
-		private string WSAppOutputPath;
+        private void MakeAppx()
+        {
+            // Locate SDK
+            string kitsRoot = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                "Windows Kits", "10", "bin");
+            var versioned = Directory.GetDirectories(kitsRoot)
+                .Select(d => new { Dir = d, Ver = Version.TryParse(Path.GetFileName(d), out var v) ? v : null })
+                .Where(x => x.Ver != null)
+                .OrderByDescending(x => x.Ver)
+                .FirstOrDefault();
+            if (versioned == null) throw new DirectoryNotFoundException("Windows Kits 10 not found");
 
-private string WSAppProcessorArchitecture;
+            string toolDir  = Path.Combine(versioned.Dir!, "x64");
+            string makeAppx = Path.Combine(toolDir, "MakeAppx.exe");
+            if (!File.Exists(makeAppx)) throw new FileNotFoundException("MakeAppx.exe missing", makeAppx);
 
-private string WSAppPublisher;
+            string args = $"pack -d \"{WSAppPath}\" -p \"{WSAppOutputPath}\\{WSAppFileName}.appx\" -l";
+            if (RunProcess(makeAppx, args, toolDir) != 0)
+            {
+                Console.WriteLine("\nMakeAppx.exe failed.");
+                Pause();
+                return;
+            }
 
-// Returns true if .NET 8 Windows Desktop runtime is installed.
-private bool CheckDotnetRuntime()
-{
-try
-{
-Process proc = new Process
-{
-StartInfo = new ProcessStartInfo
-{
-FileName = "dotnet",
-Arguments = "--list-runtimes",
-UseShellExecute = false,
-RedirectStandardOutput = true,
-CreateNoWindow = true
-}
-};
-proc.Start();
-string list = proc.StandardOutput.ReadToEnd();
-proc.WaitForExit();
-return list.Contains("Microsoft.WindowsDesktop.App 8.");
-}
-catch (Exception ex)
-{
-Console.WriteLine($"Failed to verify .NET runtime: {ex.Message}");
-return false;
-}
-}
+            Console.WriteLine($"\nPackage '{WSAppFileName}.appx' created successfully.");
+            MakeCert(toolDir);
+        }
 
-public void Run()
-{
-if (!CheckDotnetRuntime())
-{
-Console.WriteLine("Required .NET 8 runtime not found. Please install it from https://dotnet.microsoft.com/download/dotnet/8.0 and try again.");
-return;
-}
-ReadArg();
-}
+        private void MakeCert(string toolDir)
+        {
+            string exe = Path.Combine(toolDir, "MakeCert.exe");
+            if (!File.Exists(exe)) throw new FileNotFoundException("MakeCert.exe missing", exe);
 
-		private string RunProcess(string fileName, string args)
-		{
-			string result = "";
-			Process process = new Process
-			{
-				StartInfo = new ProcessStartInfo
-				{
-					FileName = fileName,
-					Arguments = args,
-					UseShellExecute = false,
-					RedirectStandardOutput = true,
-					CreateNoWindow = true
-				}
-			};
-			process.Start();
-			while (!process.StandardOutput.EndOfStream)
-			{
-				string text = process.StandardOutput.ReadLine();
-				Console.WriteLine(text);
-				if (text.Length > 0)
-				{
-					result = text;
-				}
-			}
-			return result;
-		}
+            string pvk = Path.Combine(WSAppOutputPath, WSAppFileName + ".pvk");
+            string cer = Path.Combine(WSAppOutputPath, WSAppFileName + ".cer");
 
-		private void ReadArg()
-		{
-			while (Checking)
-			{
-				Console.Clear();
-				Console.WriteLine("\t\t'{0}' by {1}", AppName, AppCreator);
-				Console.WriteLine("================================================================================");
-				Console.Write("Enter the App path: ");
-				WSAppPath = Convert.ToString(Console.ReadLine());
-				if (WSAppPath.Contains("\""))
-				{
-					WSAppPath = WSAppPath.Replace("\"", "");
-					WSAppPath = "\"" + WSAppPath + "\"";
-				}
-				else if (File.Exists(WSAppPath + "\\" + WSAppXmlFile))
-				{
-					while (Checking)
-					{
-						Console.Write("\nEnter the Output path: ");
-						WSAppOutputPath = Convert.ToString(Console.ReadLine());
-						if (WSAppOutputPath.Contains("\""))
-						{
-							WSAppOutputPath = WSAppOutputPath.Replace("\"", "");
-							WSAppOutputPath = "\"" + WSAppOutputPath + "\"";
-						}
-						else if (Directory.Exists(WSAppOutputPath))
-						{
-							WSAppFileName = Path.GetFileName(WSAppPath);
-							using (XmlReader xmlReader = XmlReader.Create(WSAppPath + "\\" + WSAppXmlFile))
-							{
-								while (xmlReader.Read())
-								{
-									if (xmlReader.IsStartElement() && xmlReader.Name == "Identity")
-									{
-										string text = xmlReader["Name"];
-										if (text != null)
-										{
-											WSAppName = text;
-										}
-										string text2 = xmlReader["Publisher"];
-										if (text2 != null)
-										{
-											WSAppPublisher = text2;
-										}
-										string text3 = xmlReader["Version"];
-										if (text3 != null)
-										{
-											WSAppVersion = text3;
-										}
-										string text4 = xmlReader["ProcessorArchitecture"];
-										if (text4 != null)
-										{
-											WSAppProcessorArchitecture = text4;
-										}
-									}
-								}
-							}
-							while (Checking)
-							{
-								MakeAppx();
-							}
-						}
-						else
-						{
-							Checking = true;
-							Console.WriteLine("\nInvailed Output Path, '{0}' Directory not found!", WSAppOutputPath);
-							Console.Write("Press any Key to retry...");
-							Console.ReadKey();
-							Console.Clear();
-							Console.WriteLine("\t\t'{0}' by {1}", AppName, AppCreator);
-							Console.Write("================================================================================");
-						}
-					}
-				}
-				else
-				{
-					Checking = true;
-					Console.WriteLine("\nInvailed App Path, '{0}' file not found!", WSAppXmlFile);
-					Console.Write("Press any Key to retry...");
-					Console.ReadKey();
-				}
-			}
-		}
+            if (File.Exists(pvk)) File.Delete(pvk);
+            if (File.Exists(cer)) File.Delete(cer);
 
-		private void MakeAppx()
-		{
-            string text = Path.Combine(AppCurrentDirctory, "tools", "MakeAppx.exe");
-			string args = "pack -d \"" + WSAppPath + "\" -p \"" + WSAppOutputPath + "\\" + WSAppFileName + ".appx\" -l";
-			if (File.Exists(text))
-			{
-				if (File.Exists(WSAppOutputPath + "\\" + WSAppFileName + ".appx"))
-				{
-					File.Delete(WSAppOutputPath + "\\" + WSAppFileName + ".appx");
-				}
-				Console.WriteLine("\nPlease wait.. Creating '.appx' package file.\n");
-				if (RunProcess(text, args).ToLower().Contains("succeeded"))
-				{
-					Console.Clear();
-					Console.WriteLine("\t\t'{0}' by {1}", AppName, AppCreator);
-					Console.WriteLine("================================================================================");
-					Console.WriteLine("Package '{0}' creation succeeded.", WSAppFileName + ".appx");
-					while (Checking)
-					{
-						MakeCert();
-					}
-				}
-				else
-				{
-					Checking = false;
-					Console.Clear();
-					Console.WriteLine("\t\t'{0}' by {1}", AppName, AppCreator);
-					Console.WriteLine("================================================================================");
-					Console.Write("Package '{0}' creation failed... press any Key to exit.", WSAppFileName + ".appx");
-					Console.ReadKey();
-				}
-			}
-			else
-			{
-				Checking = false;
-				Console.WriteLine("\nCan't create '.appx' file, 'MakeAppx.exe' file not found!");
-				Console.Write("Press any Key to exit...");
-				Console.ReadKey();
-			}
-		}
+            string args =
+                $"-n \"{WSAppPublisher}\" -r -a sha256 -len 2048 -cy end -h 0 " +
+                $"-eku 1.3.6.1.5.5.7.3.3 -b 01/01/2000 -sv \"{pvk}\" \"{cer}\"";
 
-		private void MakeCert()
-		{
-            string text = Path.Combine(AppCurrentDirctory, "tools", "MakeCert.exe");
-			string args = "-n \"" + WSAppPublisher + "\" -r -a sha256 -len 2048 -cy end -h 0 -eku 1.3.6.1.5.5.7.3.3 -b 01/01/2000 -sv \"" + WSAppOutputPath + "\\" + WSAppFileName + ".pvk\" \"" + WSAppOutputPath + "\\" + WSAppFileName + ".cer\"";
-			if (File.Exists(text))
-			{
-				if (File.Exists(WSAppOutputPath + "\\" + WSAppFileName + ".pvk"))
-				{
-					File.Delete(WSAppOutputPath + "\\" + WSAppFileName + ".pvk");
-				}
-				if (File.Exists(WSAppOutputPath + "\\" + WSAppFileName + ".cer"))
-				{
-					File.Delete(WSAppOutputPath + "\\" + WSAppFileName + ".cer");
-				}
-				Console.WriteLine("\nPlease wait.. Creating certificate for the package.\n");
-				Console.Write("Certificate creation: ");
-				if (RunProcess(text, args).ToLower().Contains("succeeded"))
-				{
-					while (Checking)
-					{
-						Pvk2Pfx();
-					}
-				}
-				else
-				{
-					Checking = false;
-					Console.WriteLine("\nFailed to create Certificate for the package... Prees any Key exit.");
-					Console.ReadKey();
-				}
-			}
-			else
-			{
-				Checking = false;
-				Console.WriteLine("\nCan't create Certificate for the package, 'MakeCert.exe' file not found!");
-				Console.Write("Press any Key to exit...");
-				Console.ReadKey();
-			}
-		}
+            if (RunProcess(exe, args, toolDir) != 0)
+            {
+                Console.WriteLine("\nMakeCert.exe failed.");
+                Pause();
+                return;
+            }
 
-		private void Pvk2Pfx()
-		{
-            string text = Path.Combine(AppCurrentDirctory, "tools", "Pvk2Pfx.exe");
-			string args = "-pvk \"" + WSAppOutputPath + "\\" + WSAppFileName + ".pvk\" -spc \"" + WSAppOutputPath + "\\" + WSAppFileName + ".cer\" -pfx \"" + WSAppOutputPath + "\\" + WSAppFileName + ".pfx\"";
-			if (File.Exists(text))
-			{
-				if (File.Exists(WSAppOutputPath + "\\" + WSAppFileName + ".pfx"))
-				{
-					File.Delete(WSAppOutputPath + "\\" + WSAppFileName + ".pfx");
-				}
-				Console.WriteLine("\nPlease wait.. Converting certificate to sign the package.\n");
-				Console.Write("Certificate convertion: ");
-				if (RunProcess(text, args).Length == 0)
-				{
-					Console.Write("succeeded");
-					while (Checking)
-					{
-						SignApp();
-					}
-				}
-				else
-				{
-					Checking = false;
-					Console.WriteLine("\nCan't convert certificate to sign the package... Prees any Key exit...");
-					Console.ReadKey();
-				}
-			}
-			else
-			{
-				Checking = false;
-				Console.WriteLine("\nCan't convert Certificate to sign the package, 'Pvk2Pfx.exe' file not found!");
-				Console.Write("Press any Key to exit...");
-				Console.ReadKey();
-			}
-		}
+            Pvk2Pfx(toolDir);
+        }
 
-		private void SignApp()
-		{
-            string text = Path.Combine(AppCurrentDirctory, "tools", "SignTool.exe");
-			string args = "sign -fd SHA256 -a -f \"" + WSAppOutputPath + "\\" + WSAppFileName + ".pfx\" \"" + WSAppOutputPath + "\\" + WSAppFileName + ".appx\"";
-			if (File.Exists(text))
-			{
-				Console.WriteLine("\n\nPlease wait.. Signing the package, this may take some minutes.\n");
-				if (RunProcess(text, args).ToLower().Contains("successfully signed"))
-				{
-					Checking = false;
-					Console.WriteLine("Package signing succeeded. Please install the '.cer' file to [Local Computer\\Trusted Root Certification Authorities] before install the App Package or use 'WSAppPkgIns.exe' file to install the App Package!");
-					Console.Write("\nPress any Key to exit..... :)");
-					Console.ReadKey();
-				}
-				else
-				{
-					Checking = false;
-					Console.WriteLine("\nCan't Sign the package, Press any Key to exit...");
-					Console.ReadKey();
-				}
-			}
-			else
-			{
-				Checking = false;
-				Console.WriteLine("\nCan't Sign the package, 'SignTool.exe' file not found!");
-				Console.Write("Press any Key to exit...");
-				Console.ReadKey();
-			}
-		}
-	}
+        private void Pvk2Pfx(string toolDir)
+        {
+            string exe = Path.Combine(toolDir, "Pvk2Pfx.exe");
+            if (!File.Exists(exe)) throw new FileNotFoundException("Pvk2Pfx.exe missing", exe);
+
+            string pvk = Path.Combine(WSAppOutputPath, WSAppFileName + ".pvk");
+            string cer = Path.Combine(WSAppOutputPath, WSAppFileName + ".cer");
+            string pfx = Path.Combine(WSAppOutputPath, WSAppFileName + ".pfx");
+
+            if (File.Exists(pfx)) File.Delete(pfx);
+
+            string args = $"-pvk \"{pvk}\" -spc \"{cer}\" -pfx \"{pfx}\"";
+
+            if (RunProcess(exe, args, toolDir) != 0)
+            {
+                Console.WriteLine("\nPvk2Pfx.exe failed.");
+                Pause();
+                return;
+            }
+
+            SignApp(toolDir);
+        }
+
+        private void SignApp(string toolDir)
+        {
+            string exe = Path.Combine(toolDir, "SignTool.exe");
+            if (!File.Exists(exe)) throw new FileNotFoundException("SignTool.exe missing", exe);
+
+            string pfx  = Path.Combine(WSAppOutputPath, WSAppFileName + ".pfx");
+            string appx = Path.Combine(WSAppOutputPath, WSAppFileName + ".appx");
+            string args = $"sign -fd SHA256 -a -f \"{pfx}\" \"{appx}\"";
+
+            if (RunProcess(exe, args, toolDir) != 0)
+            {
+                Console.WriteLine("\nSignTool.exe failed.");
+                Pause();
+                return;
+            }
+
+            Console.WriteLine("\nPackage signing succeeded!");
+            Console.Write("\nPress any key to exit...");
+            Console.ReadKey();
+            Checking = false;
+        }
+
+        private int RunProcess(string exePath, string args, string workingDirectory)
+        {
+            var psi = new ProcessStartInfo(exePath, args)
+            {
+                WorkingDirectory       = workingDirectory,
+                UseShellExecute        = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError  = true,
+                CreateNoWindow         = true
+            };
+
+            using var proc = Process.Start(psi)!;
+            proc.OutputDataReceived += (_, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
+            proc.ErrorDataReceived  += (_, e) => { if (e.Data != null) Console.Error.WriteLine(e.Data); };
+            proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
+            proc.WaitForExit();
+            return proc.ExitCode;
+        }
+
+        private void Pause()
+        {
+            Console.Write("\nPress any key to retry...");
+            Console.ReadKey();
+        }
+    }
 }

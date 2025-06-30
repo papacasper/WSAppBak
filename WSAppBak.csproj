@@ -3,25 +3,32 @@
   <PropertyGroup>
     <!-- Produce a console EXE -->
     <OutputType>Exe</OutputType>
-    <!-- Target the Windows-specific .NET 8.0 runtime -->
     <TargetFramework>net8.0-windows</TargetFramework>
-    <!-- Match your prior AnyCPU setting -->
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <!-- Assembly metadata -->
-    <AssemblyName>WSAppBak</AssemblyName>
-    <RootNamespace>WSAppBak</RootNamespace>
-    <ApplicationVersion>1.0.0.0</ApplicationVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>    <!-- or true if you want the framework bundled -->
+    <PublishSingleFile>false</PublishSingleFile><!-- enable if you want single-file -->
+    <IncludeAllContentForSelfExtract>false</IncludeAllContentForSelfExtract><!-- only for single-file -->
 
-    <!-- Prevent auto-generation of AssemblyInfo to avoid duplicates -->
+    <!-- Prevent auto-generated AssemblyInfo duplicates -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
-  <!-- Copy all external tool executables into the WSAppBak subfolder at output -->
   <ItemGroup>
-    <None Include="tools\**\*.*">
+    <!--
+      Publish everything under your tools\ folder:
+      - the four helper EXEs
+      - their .manifest files
+      - any side-by-side DLLs (appxpackaging.dll, appxsip.dll)
+      - and their manifests
+    -->
+    <Content Include="tools\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </None>
+      <!-- for single-file bundles, you’d add:
+      <IncludeInSingleFile>true</IncludeInSingleFile>
+      <BundleRelativePath>tools\%(RecursiveDir)%(Filename)%(Extension)</BundleRelativePath>
+      -->
+    </Content>
   </ItemGroup>
 
 </Project>

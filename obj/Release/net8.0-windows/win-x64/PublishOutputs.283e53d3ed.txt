@@ -1,8 +1,4 @@
 C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak.exe
-C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak\MakeAppx.exe
-C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak\MakeCert.exe
-C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak\Pvk2Pfx.exe
-C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak\SignTool.exe
 C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak.dll
 C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak.deps.json
 C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak.runtimeconfig.json
