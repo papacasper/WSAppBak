@@ -18,7 +18,7 @@
 
   <!-- Copy all external tool executables into the WSAppBak subfolder at output -->
   <ItemGroup>
-    <None Include="WSAppBak\**\*.*">
+    <None Include="tools\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
