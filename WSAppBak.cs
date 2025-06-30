@@ -11,6 +11,7 @@ namespace WSAppBak
         private readonly string AppName      = "Windows Store App Backup";
         private readonly string AppCreator   = "Kiran Murmu";
         private readonly string WSAppXmlFile = "AppxManifest.xml";
+        private const string WindowsSdkUrl   = "https://developer.microsoft.com/windows/downloads/windows-10-sdk/";
         private bool Checking                = true;
 
         private string WSAppPath;
@@ -80,11 +81,16 @@ namespace WSAppBak
                 .Where(x => x.Ver != null)
                 .OrderByDescending(x => x.Ver)
                 .FirstOrDefault();
-            if (versioned == null) throw new DirectoryNotFoundException("Windows Kits 10 not found");
+            if (versioned == null)
+                throw new DirectoryNotFoundException(
+                    $"Windows Kits 10 not found. Install the Windows SDK from {WindowsSdkUrl}");
 
             string toolDir  = Path.Combine(versioned.Dir!, "x64");
             string makeAppx = Path.Combine(toolDir, "MakeAppx.exe");
-            if (!File.Exists(makeAppx)) throw new FileNotFoundException("MakeAppx.exe missing", makeAppx);
+            if (!File.Exists(makeAppx))
+                throw new FileNotFoundException(
+                    $"MakeAppx.exe missing. Install the Windows SDK from {WindowsSdkUrl}",
+                    makeAppx);
 
             string args = $"pack -d \"{WSAppPath}\" -p \"{WSAppOutputPath}\\{WSAppFileName}.appx\" -l";
             if (RunProcess(makeAppx, args, toolDir) != 0)
@@ -101,7 +107,10 @@ namespace WSAppBak
         private void MakeCert(string toolDir)
         {
             string exe = Path.Combine(toolDir, "MakeCert.exe");
-            if (!File.Exists(exe)) throw new FileNotFoundException("MakeCert.exe missing", exe);
+            if (!File.Exists(exe))
+                throw new FileNotFoundException(
+                    $"MakeCert.exe missing. Install the Windows SDK from {WindowsSdkUrl}",
+                    exe);
 
             string pvk = Path.Combine(WSAppOutputPath, WSAppFileName + ".pvk");
             string cer = Path.Combine(WSAppOutputPath, WSAppFileName + ".cer");
@@ -126,7 +135,10 @@ namespace WSAppBak
         private void Pvk2Pfx(string toolDir)
         {
             string exe = Path.Combine(toolDir, "Pvk2Pfx.exe");
-            if (!File.Exists(exe)) throw new FileNotFoundException("Pvk2Pfx.exe missing", exe);
+            if (!File.Exists(exe))
+                throw new FileNotFoundException(
+                    $"Pvk2Pfx.exe missing. Install the Windows SDK from {WindowsSdkUrl}",
+                    exe);
 
             string pvk = Path.Combine(WSAppOutputPath, WSAppFileName + ".pvk");
             string cer = Path.Combine(WSAppOutputPath, WSAppFileName + ".cer");
@@ -149,7 +161,10 @@ namespace WSAppBak
         private void SignApp(string toolDir)
         {
             string exe = Path.Combine(toolDir, "SignTool.exe");
-            if (!File.Exists(exe)) throw new FileNotFoundException("SignTool.exe missing", exe);
+            if (!File.Exists(exe))
+                throw new FileNotFoundException(
+                    $"SignTool.exe missing. Install the Windows SDK from {WindowsSdkUrl}",
+                    exe);
 
             string pfx  = Path.Combine(WSAppOutputPath, WSAppFileName + ".pfx");
             string appx = Path.Combine(WSAppOutputPath, WSAppFileName + ".appx");
