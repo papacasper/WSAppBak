@@ -182,7 +182,7 @@ ReadArg();
 
 		private void MakeAppx()
 		{
-			string text = AppCurrentDirctory + "\\WSAppBak\\MakeAppx.exe";
+            string text = Path.Combine(AppCurrentDirctory, "tools", "MakeAppx.exe");
 			string args = "pack -d \"" + WSAppPath + "\" -p \"" + WSAppOutputPath + "\\" + WSAppFileName + ".appx\" -l";
 			if (File.Exists(text))
 			{
@@ -223,7 +223,7 @@ ReadArg();
 
 		private void MakeCert()
 		{
-			string text = AppCurrentDirctory + "\\WSAppBak\\MakeCert.exe";
+            string text = Path.Combine(AppCurrentDirctory, "tools", "MakeCert.exe");
 			string args = "-n \"" + WSAppPublisher + "\" -r -a sha256 -len 2048 -cy end -h 0 -eku 1.3.6.1.5.5.7.3.3 -b 01/01/2000 -sv \"" + WSAppOutputPath + "\\" + WSAppFileName + ".pvk\" \"" + WSAppOutputPath + "\\" + WSAppFileName + ".cer\"";
 			if (File.Exists(text))
 			{
@@ -262,7 +262,7 @@ ReadArg();
 
 		private void Pvk2Pfx()
 		{
-			string text = AppCurrentDirctory + "\\WSAppBak\\Pvk2Pfx.exe";
+            string text = Path.Combine(AppCurrentDirctory, "tools", "Pvk2Pfx.exe");
 			string args = "-pvk \"" + WSAppOutputPath + "\\" + WSAppFileName + ".pvk\" -spc \"" + WSAppOutputPath + "\\" + WSAppFileName + ".cer\" -pfx \"" + WSAppOutputPath + "\\" + WSAppFileName + ".pfx\"";
 			if (File.Exists(text))
 			{
@@ -298,7 +298,7 @@ ReadArg();
 
 		private void SignApp()
 		{
-			string text = AppCurrentDirctory + "\\WSAppBak\\SignTool.exe";
+            string text = Path.Combine(AppCurrentDirctory, "tools", "SignTool.exe");
 			string args = "sign -fd SHA256 -a -f \"" + WSAppOutputPath + "\\" + WSAppFileName + ".pfx\" \"" + WSAppOutputPath + "\\" + WSAppFileName + ".appx\"";
 			if (File.Exists(text))
 			{
