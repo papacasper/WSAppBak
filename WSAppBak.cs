@@ -27,14 +27,47 @@ namespace WSAppBak
 
 		private string WSAppOutputPath;
 
-		private string WSAppProcessorArchitecture;
+private string WSAppProcessorArchitecture;
 
-		private string WSAppPublisher;
+private string WSAppPublisher;
 
-		public void Run()
-		{
-			ReadArg();
-		}
+// Returns true if .NET 8 Windows Desktop runtime is installed.
+private bool CheckDotnetRuntime()
+{
+try
+{
+Process proc = new Process
+{
+StartInfo = new ProcessStartInfo
+{
+FileName = "dotnet",
+Arguments = "--list-runtimes",
+UseShellExecute = false,
+RedirectStandardOutput = true,
+CreateNoWindow = true
+}
+};
+proc.Start();
+string list = proc.StandardOutput.ReadToEnd();
+proc.WaitForExit();
+return list.Contains("Microsoft.WindowsDesktop.App 8.");
+}
+catch (Exception ex)
+{
+Console.WriteLine($"Failed to verify .NET runtime: {ex.Message}");
+return false;
+}
+}
+
+public void Run()
+{
+if (!CheckDotnetRuntime())
+{
+Console.WriteLine("Required .NET 8 runtime not found. Please install it from https://dotnet.microsoft.com/download/dotnet/8.0 and try again.");
+return;
+}
+ReadArg();
+}
 
 		private string RunProcess(string fileName, string args)
 		{
