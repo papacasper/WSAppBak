@@ -19,9 +19,33 @@ namespace WSAppBak
         private string WSAppFileName;
         private string WSAppPublisher;
 
-        public void Run()
+        public void Run(string[] args)
         {
-            ReadArg();
+            if (args.Length == 2)
+            {
+                WSAppPath       = args[0].Trim('"');
+                WSAppOutputPath = args[1].Trim('"');
+
+                if (!File.Exists(Path.Combine(WSAppPath, WSAppXmlFile)))
+                {
+                    Console.WriteLine($"Invalid App Path; '{WSAppXmlFile}' not found!");
+                    return;
+                }
+
+                if (!Directory.Exists(WSAppOutputPath))
+                {
+                    Console.WriteLine("Invalid Output Path; directory not found!");
+                    return;
+                }
+
+                WSAppFileName = Path.GetFileName(WSAppPath);
+                ExtractPublisherFromManifest();
+                MakeAppx();
+            }
+            else
+            {
+                ReadArg();
+            }
         }
 
         private void ReadArg()
