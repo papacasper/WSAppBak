@@ -14,21 +14,4 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Version>2.0.0</Version>
   </PropertyGroup>
-  <ItemGroup>
-    <!--
-      Publish everything under your tools\ folder:
-      - the four helper EXEs
-      - their .manifest files
-      - any side-by-side DLLs (appxpackaging.dll, appxsip.dll)
-      - and their manifests
-    -->
-    <Content Include="tools\**\*.*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <!-- for single-file bundles, you’d add:
-      <IncludeInSingleFile>true</IncludeInSingleFile>
-      <BundleRelativePath>tools\%(RecursiveDir)%(Filename)%(Extension)</BundleRelativePath>
-      -->
-    </Content>
-  </ItemGroup>
 </Project>
