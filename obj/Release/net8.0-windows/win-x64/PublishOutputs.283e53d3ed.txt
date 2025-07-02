@@ -1,5 +1,0 @@
-C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak.exe
-C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak.dll
-C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak.deps.json
-C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak.runtimeconfig.json
-C:\Users\Casper\Documents\GitHub\WSAppBak\bin\Release\net8.0-windows\win-x64\publish\WSAppBak.pdb
